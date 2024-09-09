@@ -16,16 +16,16 @@ ElmsMarkers = {
         frameOffsetY = 700,
         announcementOffsetX = 540,
         announcementOffsetY = 400,
-        announcementScale = 0.5,
+        announcementScale = 0.5
 
     },
     placedIcons = {},
     dataQueue = {},
-    dataShareTuple = { },
-    PING_RATE = 2000,
-  }
+    dataShareTuple = {},
+    PING_RATE = 2000
+}
 
-  ElmsMarkers.iconData = {
+ElmsMarkers.iconData = {
     [1] = "elmsmarkers/icons/1.dds",
     [2] = "elmsmarkers/icons/2.dds",
     [3] = "elmsmarkers/icons/3.dds",
@@ -96,10 +96,10 @@ ElmsMarkers = {
     [68] = "elmsmarkers/icons/x.dds",
     [69] = "elmsmarkers/icons/y.dds",
     [70] = "elmsmarkers/icons/z.dds",
-    [71] = "elmsmarkers/icons/sharkpog.dds",
-  }  
-  
-  ElmsMarkers.optionMap = {
+    [71] = "elmsmarkers/icons/sharkpog.dds"
+}
+
+ElmsMarkers.optionMap = {
     ["1"] = 1,
     ["2"] = 2,
     ["3"] = 3,
@@ -170,10 +170,10 @@ ElmsMarkers = {
     ["X"] = 68,
     ["Y"] = 69,
     ["Z"] = 70,
-    ["sharkpog"] = 71,
-  }
+    ["sharkpog"] = 71
+}
 
-  ElmsMarkers.reverseOptionMap = {
+ElmsMarkers.reverseOptionMap = {
     [1] = "1",
     [2] = "2",
     [3] = "3",
@@ -245,78 +245,18 @@ ElmsMarkers = {
     [69] = "Y",
     [70] = "Z",
     [71] = "sharkpog"
-  }
+}
 
-  ElmsMarkers.options = {
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "Arrow",
-    "Marker_Lightblue",
-    "Square_Blue",
-    "Square_Green",
-    "Square_Orange",
-    "Square_OT",
-    "Square_Pink",
-    "Square_Red",
-    "Square_MT",
-    "Square_Yellow",
-    "Diamond_Blue",
-    "Diamond_Blue_1",
-    "Diamond_Blue_2",
-    "Diamond_Blue_3",
-    "Diamond_Blue_4",
-    "Diamond_Green",
-    "Diamond_Green_1",
-    "Diamond_Green_2",
-    "Diamond_Green_3",
-    "Diamond_Green_4",
-    "Diamond_Orange",
-    "Diamond_Orange_1",
-    "Diamond_Orange_2",
-    "Diamond_Orange_3",
-    "Diamond_Orange_4",
-    "Diamond_Pink",
-    "Diamond_Red",
-    "Diamond_Red_1",
-    "Diamond_Red_2",
-    "Diamond_Red_3",
-    "Diamond_Red_4",
-    "Diamond_Yellow",
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H",
-    "I",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "O",
-    "P",
-    "Q",
-    "R",
-    "S",
-    "T",
-    "U",
-    "V",
-    "W",
-    "X",
-    "Y",
-    "Z",
-    "sharkpog"
-  }  
+ElmsMarkers.options = {
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Arrow",
+    "Marker_Lightblue", "Square_Blue", "Square_Green", "Square_Orange",
+    "Square_OT", "Square_Pink", "Square_Red", "Square_MT", "Square_Yellow",
+    "Diamond_Blue", "Diamond_Blue_1", "Diamond_Blue_2", "Diamond_Blue_3",
+    "Diamond_Blue_4", "Diamond_Green", "Diamond_Green_1", "Diamond_Green_2",
+    "Diamond_Green_3", "Diamond_Green_4", "Diamond_Orange", "Diamond_Orange_1",
+    "Diamond_Orange_2", "Diamond_Orange_3", "Diamond_Orange_4", "Diamond_Pink",
+    "Diamond_Red", "Diamond_Red_1", "Diamond_Red_2", "Diamond_Red_3",
+    "Diamond_Red_4", "Diamond_Yellow", "A", "B", "C", "D", "E", "F", "G", "H",
+    "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
+    "X", "Y", "Z", "sharkpog"
+}
