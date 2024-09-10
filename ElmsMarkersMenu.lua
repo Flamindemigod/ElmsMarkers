@@ -56,6 +56,7 @@ function ElmsMarkers.buildMenu()
                     end,
                     setFunc = function(name)
                         ElmsMarkers.savedVars.currentProfile = name
+                        ElmsMarkers.CheckActivation()
                     end,
                     default = ElmsMarkers.defaults.currentProfile
                 }, {
@@ -67,6 +68,10 @@ function ElmsMarkers.buildMenu()
                     setFunc = function(value)
                         for i, v in ipairs(ElmsMarkers.savedVars.profiles) do
                             if v == ElmsMarkers.savedVars.currentProfile then
+                                local oldData =
+                                    ElmsMarkers.savedVars.positions[v]
+                                ElmsMarkers.savedVars.positions[value] = oldData
+                                ElmsMarkers.savedVars.positions[v] = nil
                                 ElmsMarkers.savedVars.profiles[i] = value
                                 ElmsMarkers.savedVars.currentProfile = value
                                 local p =
@@ -75,6 +80,7 @@ function ElmsMarkers.buildMenu()
                                 p:UpdateChoices(ElmsMarkers.savedVars.profiles)
                                 LibAddonMenu2.util.RequestRefreshIfNeeded(p)
 
+                                ElmsMarkers.CheckActivation()
                                 break
                             end
                         end
@@ -85,14 +91,18 @@ function ElmsMarkers.buildMenu()
                     tooltip = "Create new Profile",
                     icon = "/esoui/art/buttons/gamepad/gp_plus.dds",
                     func = function()
-                        table.insert(ElmsMarkers.savedVars.profiles,
-                                     "New Profile " ..
-                                         #ElmsMarkers.savedVars.profiles + 1);
+                        local profileName = "New Profile " ..
+                                                #ElmsMarkers.savedVars.profiles +
+                                                1
+                        table.insert(ElmsMarkers.savedVars.profiles, profileName);
+                        ElmsMarkers.savedVars.positions[profileName] = {}
+                        ElmsMarkers.savedVars.currentProfile = profileName
                         local p = GetControl(ElmsMarkers.name ..
                                                  "ProfileDropdown")
                         p:UpdateChoices(ElmsMarkers.savedVars.profiles)
                         LibAddonMenu2.util.RequestRefreshIfNeeded(p)
 
+                        ElmsMarkers.CheckActivation()
                     end
                 }, {
                     type = "button",
@@ -108,6 +118,7 @@ function ElmsMarkers.buildMenu()
                             if v == ElmsMarkers.savedVars.currentProfile then
                                 table.remove(ElmsMarkers.savedVars.profiles,
                                              tonumber(i))
+                                ElmsMarkers.savedVars.positions[v] = nil
                                 ElmsMarkers.savedVars.currentProfile =
                                     ElmsMarkers.savedVars.profiles[#ElmsMarkers.savedVars
                                         .profiles]
@@ -117,6 +128,7 @@ function ElmsMarkers.buildMenu()
                                 p:UpdateChoices(ElmsMarkers.savedVars.profiles)
                                 LibAddonMenu2.util.RequestRefreshIfNeeded(p)
 
+                                ElmsMarkers.CheckActivation()
                                 break
                             end
                         end

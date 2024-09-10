@@ -1,13 +1,13 @@
 ElmsMarkers = {
     name = "ElmsMarkers",
     version = "3.1.0",
-    variableVersion = 7,
+    variableVersion = 8,
     defaults = {
         profiles = {"Default"},
         currentProfile = "Default",
         enabled = true,
         locked = true,
-        positions = {},
+        positions = {["Default"] = {}},
         configStringExport = "",
         configStringImport = "",
         selectedIconTexture = 13,
