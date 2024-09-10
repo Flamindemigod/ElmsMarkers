@@ -10,7 +10,6 @@ function ElmsMarkers.buildMenu()
         registerForDefaults = true,
         registerForRefresh = true
     }
-
     local options = {
         {type = "header", name = "Settings"}, {
             type = "checkbox",
@@ -41,6 +40,91 @@ function ElmsMarkers.buildMenu()
                 ElmsMarkers.savedVars.selectedIconSize = value
                 ElmsMarkers.CheckActivation()
             end
+        }, {
+            type = "submenu",
+            name = "Profile",
+            controls = {
+                {
+                    type = "dropdown",
+                    name = "Profile",
+                    tooltip = "Select Profile",
+                    reference = ElmsMarkers.name .. "ProfileDropdown",
+                    choices = ElmsMarkers.savedVars.profiles,
+                    width = "half",
+                    getFunc = function()
+                        return ElmsMarkers.savedVars.currentProfile
+                    end,
+                    setFunc = function(name)
+                        ElmsMarkers.savedVars.currentProfile = name
+                    end,
+                    default = ElmsMarkers.defaults.currentProfile
+                }, {
+                    type = "editbox",
+                    name = "Edit Profile Name",
+                    getFunc = function()
+                        return ElmsMarkers.savedVars.currentProfile
+                    end,
+                    setFunc = function(value)
+                        for i, v in ipairs(ElmsMarkers.savedVars.profiles) do
+                            if v == ElmsMarkers.savedVars.currentProfile then
+                                ElmsMarkers.savedVars.profiles[i] = value
+                                ElmsMarkers.savedVars.currentProfile = value
+                                local p =
+                                    GetControl(ElmsMarkers.name ..
+                                                   "ProfileDropdown")
+                                p:UpdateChoices(ElmsMarkers.savedVars.profiles)
+                                LibAddonMenu2.util.RequestRefreshIfNeeded(p)
+
+                                break
+                            end
+                        end
+                    end
+                }, {
+                    type = "button",
+                    name = "Add new profile",
+                    tooltip = "Create new Profile",
+                    icon = "/esoui/art/buttons/gamepad/gp_plus.dds",
+                    func = function()
+                        table.insert(ElmsMarkers.savedVars.profiles,
+                                     "New Profile " ..
+                                         #ElmsMarkers.savedVars.profiles + 1);
+                        local p = GetControl(ElmsMarkers.name ..
+                                                 "ProfileDropdown")
+                        p:UpdateChoices(ElmsMarkers.savedVars.profiles)
+                        LibAddonMenu2.util.RequestRefreshIfNeeded(p)
+
+                    end
+                }, {
+                    type = "button",
+                    name = "Remove Profile",
+                    disabled = function()
+                        return #ElmsMarkers.savedVars.profiles >= 1;
+                    end,
+                    tooltip = "Create new Profile",
+                    icon = "/esoui/art/buttons/gamepad/gp_minus.dds",
+                    func = function()
+
+                        for i, v in ipairs(ElmsMarkers.savedVars.profiles) do
+                            if v == ElmsMarkers.savedVars.currentProfile then
+                                table.remove(ElmsMarkers.savedVars.profiles,
+                                             tonumber(i))
+                                ElmsMarkers.savedVars.currentProfile =
+                                    ElmsMarkers.savedVars.profiles[#ElmsMarkers.savedVars
+                                        .profiles]
+                                local p =
+                                    GetControl(ElmsMarkers.name ..
+                                                   "ProfileDropdown")
+                                p:UpdateChoices(ElmsMarkers.savedVars.profiles)
+                                LibAddonMenu2.util.RequestRefreshIfNeeded(p)
+
+                                break
+                            end
+                        end
+
+                    end
+                }
+
+            }
         }, {type = "header", name = "Group Markers"}, {
             type = "checkbox",
             name = "Subscribe to Group Lead Markers",
