@@ -86,13 +86,16 @@ end
 
 function ElmsMarkers.CheckActivation(eventCode)
     local zoneId = GetZoneId(GetUnitZoneIndex("player"))
-    for zone, markers in pairs(ElmsMarkers.savedVars.positions) do
+    for zone, markers in pairs(
+                             ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                                 .currentProfile]) do
         ElmsMarkers.RemovePositionIcons(zone)
     end
-    if (ElmsMarkers.savedVars.positions[zoneId] and
+    if (ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId] and
         ElmsMarkers.savedVars.enabled) then
-        ElmsMarkers.PlacePositionIcons(ElmsMarkers.savedVars.positions[zoneId],
-                                       zoneId)
+        ElmsMarkers.PlacePositionIcons(
+            ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId],
+            zoneId)
     end
     ElmsMarkers.CreateConfigString()
 end
@@ -133,11 +136,14 @@ end
 function ElmsMarkers.PlaceAtLocation(location)
     if not OSI or not OSI.CreatePositionIcon then return end
     local zone, wX, wY, wZ, iconId = unpack(location)
-    local zonePositions = ElmsMarkers.savedVars.positions[zone]
+    local zonePositions = ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                              .currentProfile][zone]
     if not zonePositions then
-        ElmsMarkers.savedVars.positions[zone] = {[1] = {wX, wY, wZ, iconId}}
+        ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] =
+            {[1] = {wX, wY, wZ, iconId}}
     else
-        table.insert(ElmsMarkers.savedVars.positions[zone], {wX, wY, wZ, iconId})
+        table.insert(ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                         .currentProfile][zone], {wX, wY, wZ, iconId})
     end
     if not ElmsMarkers.placedIcons[zone] then
         ElmsMarkers.placedIcons[zone] = {}
@@ -175,11 +181,13 @@ function ElmsMarkers.RemoveNearestMarker(location)
         OSI.DiscardPositionIcon(closestMarker)
         ElmsMarkers.placedIcons[zone][closestMarkerIndex] = nil
 
-        for k, v in pairs(ElmsMarkers.savedVars.positions[zone]) do
+        for k, v in pairs(ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                              .currentProfile][zone]) do
             if v[1] == closestMarker.x and v[2] == closestMarker.y and v[3] ==
                 closestMarker.z then closestMarkerIndex = k end
         end
-        ElmsMarkers.savedVars.positions[zone][closestMarkerIndex] = nil
+        ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone][closestMarkerIndex] =
+            nil
         ElmsMarkers.CreateConfigString()
         return {
             zone, closestMarker.x, closestMarker.y, closestMarker.z,
@@ -199,7 +207,8 @@ function ElmsMarkers.ClearZone()
     end
 
     ElmsMarkers.placedIcons[zone] = nil
-    ElmsMarkers.savedVars.positions[zone] = nil
+    ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] =
+        nil
     ElmsMarkers.CreateConfigString()
 end
 
@@ -214,7 +223,8 @@ end
 function ElmsMarkers.CreateConfigString()
     local zone = GetUnitRawWorldPosition("player")
     local configString = ""
-    local zonePositions = ElmsMarkers.savedVars.positions[zone]
+    local zonePositions = ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                              .currentProfile][zone]
     if zonePositions then
         for k, v in pairs(zonePositions) do
             configString = configString .. "/" .. zone .. "//" .. v[1] .. "," ..
@@ -233,10 +243,12 @@ function ElmsMarkers.ParseImportConfigString()
         y = tonumber(y)
         z = tonumber(z)
         iconKey = tonumber(iconKey)
-        if not ElmsMarkers.savedVars.positions[zone] then
-            ElmsMarkers.savedVars.positions[zone] = {}
-        end
-        table.insert(ElmsMarkers.savedVars.positions[zone], {x, y, z, iconKey})
+        assert(type(zone) == "number")
+        ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] =
+            ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] or
+                {}
+        table.insert(ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                         .currentProfile][zone], {x, y, z, iconKey})
     end
     ElmsMarkers.savedVars.configStringImport = ""
     ElmsMarkers.CheckActivation()

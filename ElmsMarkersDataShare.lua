@@ -151,9 +151,11 @@ function ElmsMarkers.RemoveExactMarkerAt(location)
     local zoneIcons = ElmsMarkers.placedIcons[zone]
     if (not zoneIcons) then return end
 
-    for k, v in pairs(ElmsMarkers.savedVars.positions[zone]) do
+    for k, v in pairs(ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
+                          .currentProfile][zone]) do
         if v[1] == wX and v[2] == wY and v[3] == wZ then
-            ElmsMarkers.savedVars.positions[zone][k] = nil
+            ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone][k] =
+                nil
             ElmsMarkers.CreateConfigString()
         end
     end
