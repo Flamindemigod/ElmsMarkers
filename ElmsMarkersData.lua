@@ -1,6 +1,6 @@
 ElmsMarkers = {
     name = "ElmsMarkers",
-    version = "3.1.0",
+    version = "3.2.0-rc",
     variableVersion = 8,
     defaults = {
         profiles = {"Default"},
