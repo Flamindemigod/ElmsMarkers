@@ -41,6 +41,19 @@ function ElmsMarkers.buildMenu()
                 ElmsMarkers.CheckActivation()
             end
         }, {
+            type = "slider",
+            name = "Icon Draw Distance",
+            min = 12,
+            max = 192,
+            default = ElmsMarkers.defaults.drawDistance,
+            getFunc = function()
+                return ElmsMarkers.savedVars.drawDistance
+            end,
+            setFunc = function(value)
+                ElmsMarkers.savedVars.drawDistance = value
+                ElmsMarkers.CheckActivation()
+            end
+        }, {
             type = "submenu",
             name = "Profile",
             controls = {

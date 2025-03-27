@@ -1,7 +1,7 @@
 ElmsMarkers = {
     name = "ElmsMarkers",
     version = "3.2.0-rc",
-    variableVersion = 8,
+    variableVersion = 9,
     defaults = {
         profiles = {"Default"},
         currentProfile = "Default",
@@ -18,7 +18,8 @@ ElmsMarkers = {
         frameOffsetY = 700,
         announcementOffsetX = 540,
         announcementOffsetY = 400,
-        announcementScale = 0.5
+        announcementScale = 0.5,
+        drawDistance = 64,
 
     },
     placedIcons = {},
@@ -26,6 +27,7 @@ ElmsMarkers = {
     dataShareTuple = {},
     PING_RATE = 2000
 }
+
 
 ElmsMarkers.iconData = {
     [1] = "elmsmarkers/icons/1.dds",
@@ -97,8 +99,7 @@ ElmsMarkers.iconData = {
     [67] = "elmsmarkers/icons/w.dds",
     [68] = "elmsmarkers/icons/x.dds",
     [69] = "elmsmarkers/icons/y.dds",
-    [70] = "elmsmarkers/icons/z.dds",
-    [71] = "elmsmarkers/icons/sharkpog.dds"
+    [70] = "elmsmarkers/icons/z.dds"
 }
 
 ElmsMarkers.optionMap = {
@@ -171,8 +172,7 @@ ElmsMarkers.optionMap = {
     ["W"] = 67,
     ["X"] = 68,
     ["Y"] = 69,
-    ["Z"] = 70,
-    ["sharkpog"] = 71
+    ["Z"] = 70
 }
 
 ElmsMarkers.reverseOptionMap = {
@@ -245,8 +245,8 @@ ElmsMarkers.reverseOptionMap = {
     [67] = "W",
     [68] = "X",
     [69] = "Y",
-    [70] = "Z",
-    [71] = "sharkpog"
+    [70] = "Z"
+
 }
 
 ElmsMarkers.options = {
@@ -260,5 +260,5 @@ ElmsMarkers.options = {
     "Diamond_Red", "Diamond_Red_1", "Diamond_Red_2", "Diamond_Red_3",
     "Diamond_Red_4", "Diamond_Yellow", "A", "B", "C", "D", "E", "F", "G", "H",
     "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
-    "X", "Y", "Z", "sharkpog"
+    "X", "Y", "Z"
 }

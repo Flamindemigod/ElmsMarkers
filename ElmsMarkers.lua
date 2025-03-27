@@ -1,4 +1,13 @@
 ElmsMarkers = ElmsMarkers or {}
+function ElmsMarkers.CheckGroupLead(eventCode, leaderTag)
+    if AreUnitsEqual(GetGroupLeaderUnitTag(), 'player') then
+        ElmsMarkers.UI.placePublishButton:SetHidden(false)
+        ElmsMarkers.UI.removePublishButton:SetHidden(false)
+    else
+        ElmsMarkers.UI.placePublishButton:SetHidden(true)
+        ElmsMarkers.UI.removePublishButton:SetHidden(true)
+    end
+end
 
 function ElmsMarkers.OnAddOnLoaded(eventCode, addonName)
     if (addonName ~= ElmsMarkers.name) then return end
@@ -11,38 +20,43 @@ function ElmsMarkers.OnAddOnLoaded(eventCode, addonName)
                                 ElmsMarkers.defaults, nil, GetWorldName())
     SLASH_COMMANDS["/elms"] = ElmsMarkers.HandleCommandInput
 
-    ZO_CreateStringId("SI_BINDING_NAME_EM_PLACE_MARKER", "Place Marker")
-    ZO_CreateStringId("SI_BINDING_NAME_EM_REMOVE_MARKER", "Remove Marker")
-    ZO_CreateStringId("SI_BINDING_NAME_EM_PLACE_RENDEZVOUS", "Place Rendezvous")
-
     EVENT_MANAGER:RegisterForEvent(ElmsMarkers.name, EVENT_PLAYER_ACTIVATED,
                                    ElmsMarkers.CheckActivation)
     EVENT_MANAGER:RegisterForEvent(ElmsMarkers.name, EVENT_ZONE_CHANGED,
                                    ElmsMarkers.CheckActivation)
-    EVENT_MANAGER:RegisterForEvent(ElmsMarkers.name, EVENT_LEADER_UPDATE,
-                                   ElmsMarkers.CheckGroupLead)
-    EVENT_MANAGER:RegisterForEvent(ElmsMarkers.name, EVENT_UNIT_CREATED,
-                                   ElmsMarkers.CheckGroupLead)
-
+    EVENT_MANAGER:RegisterForUpdate(ElmsMarkers.name .. 'cycle', 100,
+                                    ElmsMarkers.Cycle)
+        EVENT_MANAGER:RegisterForUpdate(ElmsMarkers.name .. 'manageIcons', 1000,
+                                    ElmsMarkers.ManagePositionIcons)
     ElmsMarkers.buildMenu()
     ElmsMarkers.setupUI()
-    ElmsMarkers.SetFramePosition()
-    ElmsMarkers.SetAnnouncementPosition()
-    ElmsMarkers.UnlockUI(false)
 
     ElmsMarkers.shareMapData = LibDataShare:RegisterMap("ElmsMarkers", 2,
-                                                        ElmsMarkers.HandleDataShareReceived)
+                                                        ElmsMarkers.HandleData)
 end
 
-function ElmsMarkers.CheckGroupLead(eventCode, leaderTag)
-    if AreUnitsEqual(GetGroupLeaderUnitTag(), 'player') then
-        ElmsMarkers.UI.placePublishButton:SetHidden(false)
-        ElmsMarkers.UI.removePublishButton:SetHidden(false)
-    else
-        ElmsMarkers.UI.placePublishButton:SetHidden(true)
-        ElmsMarkers.UI.removePublishButton:SetHidden(true)
+function ElmsMarkers.HandleData(tag, data)
+    if tag and data then
+        if (tag == GetGroupLeaderUnitTag() and
+            ElmsMarkers.savedVars.subscribeToLead) then
+            local dataIdentifier = data % 10
+            if dataIdentifier == 1 then
+                local wX = data / 100000
+                local iconId = data % 100000 / 10
+
+            elseif dataIdentifier == 2 then
+                local wZ = data / 100000
+                local zone = data % 100000 / 10
+
+            elseif dataIdentifier == 9 then
+                local wY = data / 1000
+                local isAdd = data % 1000 / 100
+            end
+        end
     end
 end
+
+function ElmsMarkers.Cycle() if LibDataShare:IsSendWindow() then end end
 
 function ElmsMarkers.HandleCommandInput(args)
     args = args:gsub("%s+", "")
@@ -56,18 +70,11 @@ function ElmsMarkers.HandleCommandInput(args)
                                        "Disabled"))
         ElmsMarkers.CheckActivation()
     elseif args == "publish" or args == "pp" then
-        local location = ElmsMarkers.PreparePublish(true)
+        local location = ElmsMarkers.PlaceAndPublish()
         if (location) then
             CHAT_SYSTEM:AddMessage("[ElmsMarkers] Published new marker at " ..
                                        location[2] .. ", " .. location[3] ..
                                        ", " .. location[4])
-        end
-    elseif args == "removepublish" or args == "rr" then
-        local location = ElmsMarkers.PreparePublish(false)
-        if (location) then
-            CHAT_SYSTEM:AddMessage(
-                "[ElmsMarkers] Published removed marker at " .. location[2] ..
-                    ", " .. location[3] .. ", " .. location[4])
         end
     elseif args == "place" or args == "p" then
         local location = ElmsMarkers.PlaceAtMe()
@@ -75,7 +82,7 @@ function ElmsMarkers.HandleCommandInput(args)
                                    location[2] .. ", " .. location[3] .. ", " ..
                                    location[4])
     elseif args == "remove" or args == "r" then
-        local location = ElmsMarkers.RemoveNearMe()
+        local location = ElmsMarkers.RemoveNearestMarker()
         if (location) then
             CHAT_SYSTEM:AddMessage("[ElmsMarkers] Removed marker at " ..
                                        location[2] .. ", " .. location[3] ..
@@ -84,6 +91,57 @@ function ElmsMarkers.HandleCommandInput(args)
     end
 end
 
+
+function ElmsMarkers.generateLookup(zoneId)
+    ElmsMarkers.__distanceLookupX = {};
+    ElmsMarkers.__distanceLookupZ = {};
+    local positions = ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId];
+    for idx, iconLocation in ipairs(positions) do
+        table.insert(ElmsMarkers.__distanceLookupX, iconLocation[1], idx);
+        table.insert(ElmsMarkers.__distanceLookupZ, iconLocation[3], idx);
+    end
+    table.sort(ElmsMarkers.__distanceLookupX);
+    table.sort(ElmsMarkers.__distanceLookupZ);
+end
+
+function search(lookup, v, out)
+    for lv, lookupidx in pairs(lookup) do
+        if math.abs(v - lv) <= ElmsMarkers.savedVars.drawDistance * 200 then
+            if out[lookupidx] == nil then
+                out[lookupidx] = false;
+            elseif out[lookupidx] == false then
+                out[lookupidx] = true;
+            end
+        end
+    end
+end
+
+function ElmsMarkers.ManagePositionIcons()
+    local lookupX = ElmsMarkers.__distanceLookupX or {};
+    local lookupZ = ElmsMarkers.__distanceLookupZ or {};
+    if (lookupX == nil or lookupZ == nil) then return end
+    local zoneId, pX, pY, pZ = GetUnitRawWorldPosition("player");
+    local positions = ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId];
+    --ElmsMarkers.RemovePositionIcons(zoneId)
+    if not ElmsMarkers.placedIcons[zoneId] then
+        ElmsMarkers.placedIcons[zoneId] = {}
+    end
+
+    ElmsMarkers.iconsValid = {};
+    search(lookupX, pX, ElmsMarkers.iconsValid);
+    search(lookupZ, pZ, ElmsMarkers.iconsValid);
+
+    if OSI and OSI.CreatePositionIcon then
+        for idx, iconValid in ipairs(ElmsMarkers.iconsValid) do
+            if iconValid == true then
+                ElmsMarkers.DoPlaceIcon(zoneId, idx, positions[idx][1],
+                                        positions[idx][2], positions[idx][3],
+                                        ElmsMarkers.iconData[positions[idx][4]])
+            end
+        end
+    end
+
+end
 function ElmsMarkers.CheckActivation(eventCode)
     local zoneId = GetZoneId(GetUnitZoneIndex("player"))
     for zone, markers in pairs(
@@ -93,27 +151,16 @@ function ElmsMarkers.CheckActivation(eventCode)
     end
     if (ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId] and
         ElmsMarkers.savedVars.enabled) then
-        ElmsMarkers.PlacePositionIcons(
-            ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId],
-            zoneId)
+        ElmsMarkers.generateLookup(zoneId)
+        ElmsMarkers.ManagePositionIcons()
+
+        -- ElmsMarkers.PlacePositionIcons(
+        --     ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zoneId],
+        --     zoneId)
     end
     ElmsMarkers.CreateConfigString()
 end
 
-function ElmsMarkers.PlacePositionIcons(positions, zoneId)
-    if not ElmsMarkers.placedIcons[zoneId] then
-        ElmsMarkers.placedIcons[zoneId] = {}
-    end
-    if OSI and OSI.CreatePositionIcon then
-        for i, iconLocation in pairs(positions) do
-            if iconLocation then
-                ElmsMarkers.DoPlaceIcon(zoneId, iconLocation[1],
-                                        iconLocation[2], iconLocation[3],
-                                        ElmsMarkers.iconData[iconLocation[4]])
-            end
-        end
-    end
-end
 
 function ElmsMarkers.RemovePositionIcons(zoneId)
     if ElmsMarkers.placedIcons[zoneId] then
@@ -128,9 +175,7 @@ end
 
 function ElmsMarkers.PlaceAtMe()
     local zone, wX, wY, wZ = GetUnitRawWorldPosition("player")
-    return ElmsMarkers.PlaceAtLocation({
-        zone, wX, wY, wZ, ElmsMarkers.savedVars.selectedIconTexture
-    })
+    return ElmsMarkers.PlaceAtLocation({zone, wX, wY, wZ, ElmsMarkers.savedVars.selectedIconTexture})
 end
 
 function ElmsMarkers.PlaceAtLocation(location)
@@ -148,17 +193,60 @@ function ElmsMarkers.PlaceAtLocation(location)
     if not ElmsMarkers.placedIcons[zone] then
         ElmsMarkers.placedIcons[zone] = {}
     end
-    ElmsMarkers.DoPlaceIcon(zone, wX, wY, wZ, ElmsMarkers.iconData[iconId])
+    ElmsMarkers.CheckActivation();
     ElmsMarkers.CreateConfigString()
 
     return {zone, wX, wY, wZ, iconId}
 end
 
-function ElmsMarkers.RemoveNearMe()
-    local zone, wX, wY, wZ = GetUnitRawWorldPosition("player")
-    return ElmsMarkers.RemoveNearestMarker({zone, wX, wY, wZ})
+function ElmsMarkers.PlaceAndPublish()
+    local timeNow = GetGameTimeMilliseconds()
+    if (ElmsMarkers.lastPingTime == nil or
+        (timeNow - ElmsMarkers.lastPingTime > ElmsMarkers.PING_RATE)) then
+        if AreUnitsEqual(GetGroupLeaderUnitTag(), 'player') then
+            local location = ElmsMarkers.PlaceAtMe()
+            ElmsMarkers.EncodeEnqueuePublish(location, true)
+            return location
+        else
+            CHAT_SYSTEM:AddMessage(
+                "[ElmsMarkers] You must be the group lead to publish markers!")
+        end
+    else
+        CHAT_SYSTEM:AddMessage(
+            "[ElmsMarkers] You're publishing too quickly! Publish not sent, try again later.")
+    end
 end
 
+function ElmsMarkers.EncodeEnqueuePublish(location, isAdd)
+    local zone, wX, wY, wZ, iconId = unpack(location)
+    -- ping 1: wX iconId
+    -- ping 2: wZ zone
+    -- ping 3: wY isAdd/isRemove endSignature
+
+    local addBit = isAdd and 1 or 0
+    local endSignature = 99
+
+    local dataPacket1 = wX * 100000 + iconId * 10 + 1
+    local dataPacket2 = wZ * 100000 + zone * 10 + 2
+    local dataPacket3 = wY * 1000 + addBit * 100 + endSignature
+
+    local wX = math.floor(dataPacket1 / 100000)
+    local iconId = math.floor(dataPacket1 % 100000 / 10)
+
+    local wZ = math.floor(dataPacket2 / 100000)
+    local zone = math.floor(dataPacket2 % 100000 / 10)
+
+    local wY = math.floor(dataPacket3 / 1000)
+    local isAdd = math.floor(dataPacket3 % 1000 / 100)
+
+    d(wX, wY, wZ, zone, iconId, isAdd)
+
+    zo_callLater(ElmsMarkers.shareMapData:SendData(dataPacket1), 100)
+    zo_callLater(ElmsMarkers.shareMapData:SendData(dataPacket2), 200)
+    zo_callLater(ElmsMarkers.shareMapData:SendData(dataPacket3), 300)
+
+    ElmsMarkers.lastPingTime = GetGameTimeMilliseconds()
+end
 function ElmsMarkers.RemoveNearestMarker(location)
     if not OSI or not OSI.DiscardPositionIcon then return end
     local zone, wX, wY, wZ = unpack(location)
@@ -198,6 +286,7 @@ function ElmsMarkers.RemoveNearestMarker(location)
 
 end
 
+
 function ElmsMarkers.ClearZone()
     if not OSI or not OSI.DiscardPositionIcon then return end
     local zone = GetUnitRawWorldPosition("player")
@@ -212,12 +301,14 @@ function ElmsMarkers.ClearZone()
     ElmsMarkers.CreateConfigString()
 end
 
-function ElmsMarkers.DoPlaceIcon(zone, x, y, z, texture)
+function ElmsMarkers.DoPlaceIcon(zone, idx, x, y, z, texture)
     local iconSize = ElmsMarkers.savedVars.selectedIconSize / 64.0
-    table.insert(ElmsMarkers.placedIcons[zone], OSI.CreatePositionIcon(x, y, z,
-                                                                       texture,
-                                                                       iconSize *
-                                                                           OSI.GetIconSize()))
+    table.insert(ElmsMarkers.placedIcons[zone], idx, OSI.CreatePositionIcon(x,
+                                                                            y,
+                                                                            z,
+                                                                            texture,
+                                                                            iconSize *
+                                                                                OSI.GetIconSize()))
 end
 
 function ElmsMarkers.CreateConfigString()
@@ -234,6 +325,8 @@ function ElmsMarkers.CreateConfigString()
     ElmsMarkers.savedVars.configStringExport = configString
 end
 
+
+
 function ElmsMarkers.ParseImportConfigString()
     for zone, x, y, z, iconKey in string.gmatch(
                                       ElmsMarkers.savedVars.configStringImport,
@@ -244,11 +337,15 @@ function ElmsMarkers.ParseImportConfigString()
         z = tonumber(z)
         iconKey = tonumber(iconKey)
         assert(type(zone) == "number")
-        ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] =
-            ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] or
-                {}
-        table.insert(ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars
-                         .currentProfile][zone], {x, y, z, iconKey})
+        if not ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] then
+            ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone] = {}
+        end
+        -- if not ElmsMarkers.savedVars.positions[zone][hash] then
+        --     ElmsMarkers.savedVars.positions[zone][hash] = {}
+        -- end
+        -- table.insert(ElmsMarkers.savedVars.positions[zone][hash], {x, y, z, iconKey});
+        -- [ {x, y, z, key} {x, y, z, key} {x, y, z, key} {x, y, z, key} ]
+        table.insert(ElmsMarkers.savedVars.positions[ElmsMarkers.savedVars.currentProfile][zone], {x, y, z, iconKey})
     end
     ElmsMarkers.savedVars.configStringImport = ""
     ElmsMarkers.CheckActivation()
